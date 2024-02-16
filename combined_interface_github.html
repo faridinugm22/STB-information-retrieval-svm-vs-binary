@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Search</title>
+    <style>
+        body {
+            font-family: 'Tahoma', sans-serif;
+            font-size: 11px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 10px auto;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Masukkan kata (string) yang akan dicari</h1>
+    <form method="POST">
+        <input type="text" name="query" value="{{ query }}" placeholder="Masukkan kata (string)" required style="width: 500px;">
+        <select name="method">
+            <option value="vsm" {% if method == 'vsm' %}selected{% endif %}>VSM</option>
+            <option value="binary" {% if method == 'binary' %}selected{% endif %}>Binary</option>
+        </select>
+        <button type="submit">Cari</button>
+    </form>
+
+    {% if results %}
+        <h2>Hasil Pencarian "{{ query }}" dengan {{ method.upper() }}</h2>
+        
+        <table id="hasil">
+        
+        <p>Relevant docs (A): {{ '%0.2f' | format(relevant_docs) }}</p>
+        <p>Retrieved relevant docs (B): {{ '%0.2f' | format(retrieved_relevant_docs) }}</p>
+        <p>Jumlah docs yang ditemukan (C): {{ num_results }}</p> 
+        <p>Precision (B/C): {{ '%0.2f' | format(precision) }}</p>
+        <p>Recall (B/A): {{ '%0.2f' | format(recall) }}</p>
+        <p>Search Time: {{ '%0.2f' | format(search_time) }} seconds</p>
+       
+
+        <!-- Tabel dengan paginasi -->
+        
+        <div class="frame" style="width: 70%; margin: 0;">
+            <table id="myTable">
+                <thead>
+                    <tr>
+                        <th>DAPIL</th>
+                        <th>PROVINSI</th>
+                        <th>NAMA_DAPIL</th>
+                        <th>NOMOR PARTAI</th>
+                        <th>NAMA_PARTAI</th>
+                        <th>NOMOR URUT</th>
+                        <th>NAMA CALEG</th>
+                        <th>JENIS_KELAMIN</th>
+                        <th>Similarity Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc, score in results %}
+                        <tr>
+                            <td>{{ doc['DAPIL'] }}</td>
+                            <td>{{ doc['PROVINSI'] }}</td>
+                            <td>{{ doc['NAMA_DAPIL'] }}</td>
+                            <td>{{ doc['NOMOR PARTAI'] }}</td>
+                            <td>{{ doc['NAMA PARTAI'] }}</td>
+                            <td>{{ doc['NOMOR URUT'] }}</td>
+                            <td>{{ doc['NAMA CALEG'] }}</td>
+                            <td>{{ doc['JENIS_KELAMIN'] }}</td>
+                            <td>{{ '%0.2f' | format(score) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+        </div>
+    {% else %}
+        {% if query %}
+            <p>No results found for "{{ query }}".</p>
+        {% endif %}
+    {% endif %}
+    
+    <script>
+        // Script JavaScript untuk pagination
+        var table = document.getElementById('myTable');
+        var rows = table.getElementsByTagName('tr');
+        var numRows = rows.length;
+        var numPerPage = 20;
+        var numPages = Math.ceil((numRows - 1) / numPerPage); // Mengurangkan 1 untuk baris judul
+    
+        // Fungsi untuk menampilkan halaman tertentu
+        function showPage(page) {
+            var start = (page - 1) * numPerPage + 1; // Tambahkan 1 untuk baris judul
+            var end = Math.min(start + numPerPage, numRows);
+    
+            for (var i = 1; i < numRows; i++) {
+                if (i >= start && i < end) {
+                    rows[i].style.display = '';
+                } else {
+                    rows[i].style.display = 'none';
+                }
+            }
+        }
+    
+        // tampilkan baris judul tabel
+        rows[0].style.display = '';
+        
+        //rows[0].style.display = 'none';
+    
+        // Inisialisasi paginasi
+        var pagination = document.getElementById('pagination');
+        for (var i = 1; i <= numPages; i++) {
+            var pageLink = document.createElement('a');
+            pageLink.href = '#';
+            pageLink.textContent = " " + i + " ";
+            pageLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                showPage(parseInt(this.textContent));
+            });
+            pagination.appendChild(pageLink);
+        }
+    
+        // Tampilkan halaman pertama secara default
+        showPage(1);
+    </script>
+    
+</body>
+</html>
